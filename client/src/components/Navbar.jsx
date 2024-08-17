@@ -1,6 +1,5 @@
-import * as React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-
 import Box from '@mui/material/Box';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -12,19 +11,22 @@ import MenuItem from '@mui/material/MenuItem';
 import Drawer from '@mui/material/Drawer';
 import MenuIcon from '@mui/icons-material/Menu';
 import ToggleColorMode from './ToggleColor';
+import { useCookies } from 'react-cookie';
+import toast from 'react-hot-toast';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { useTheme } from './Themecontext';
 
-const logoStyle = {
-  width: '140px',
-  height: 'auto',
-  cursor: 'pointer',
-};
 
-function Navbar({ mode, toggleColorMode }) {
-  const [open, setOpen] = React.useState(false);
+function Navbar() {
+  const { mode, toggleColorMode } = useTheme();
+  const [open, setOpen] = useState(false);
+  const [cookies, , removeCookie] = useCookies(['accessToken']);
 
   const toggleDrawer = (newOpen) => () => {
     setOpen(newOpen);
   };
+
 
   const scrollToSection = (sectionId) => {
     const sectionElement = document.getElementById(sectionId);
@@ -39,6 +41,24 @@ function Navbar({ mode, toggleColorMode }) {
       setOpen(false);
     }
   };
+
+  const handleSignOut = async () => {
+
+    try {
+      const response = await axios.post('http://localhost:3000/api/users/logout', {}, { withCredentials: true });
+      console.log(response.data)
+      if (response.data.statuscode === 200 && response.data.message === "User Logged Out") {
+        toast.success(response.data.message);
+        removeCookie('accessToken');
+        window.location.href = '/';
+      }
+    } catch (error) {
+      console.log(error)
+    }
+
+  };
+
+  const isLoggedIn = !!cookies.accessToken;
 
   return (
     <div>
@@ -77,6 +97,7 @@ function Navbar({ mode, toggleColorMode }) {
             <Box
               sx={{
                 flexGrow: 1,
+                gap: 2,
                 display: 'flex',
                 alignItems: 'center',
                 ml: '-18px',
@@ -85,15 +106,17 @@ function Navbar({ mode, toggleColorMode }) {
             >
               <img
                 src={
-                  'https://assets-global.website-files.com/61ed56ae9da9fd7e0ef0a967/61f12e6faf73568658154dae_SitemarkDefault.svg'
+                  '/1.jpg'
                 }
-                style={logoStyle}
+
+                style={{ marginLeft: "10px", width: "50px", borderRadius: '47%' }}
+
                 alt="logo of sitemark"
               />
-              <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+              <Box sx={{ display: { xs: 'none', md: 'flex', gap: 10 } }}>
                 <MenuItem
                   onClick={() => scrollToSection('features')}
-                  sx={{ py: '6px', px: '12px' }}
+                  sx={{ py: '6px', px: '12px', borderRadius: 20 }}
                 >
                   <Typography variant="body2" color="text.primary">
                     Features
@@ -101,7 +124,7 @@ function Navbar({ mode, toggleColorMode }) {
                 </MenuItem>
                 <MenuItem
                   onClick={() => scrollToSection('testimonials')}
-                  sx={{ py: '6px', px: '12px' }}
+                  sx={{ py: '6px', px: '12px', borderRadius: 20 }}
                 >
                   <Typography variant="body2" color="text.primary">
                     Testimonials
@@ -109,7 +132,7 @@ function Navbar({ mode, toggleColorMode }) {
                 </MenuItem>
                 <MenuItem
                   onClick={() => scrollToSection('highlights')}
-                  sx={{ py: '6px', px: '12px' }}
+                  sx={{ py: '6px', px: '12px', borderRadius: 20 }}
                 >
                   <Typography variant="body2" color="text.primary">
                     Highlights
@@ -117,7 +140,7 @@ function Navbar({ mode, toggleColorMode }) {
                 </MenuItem>
                 <MenuItem
                   onClick={() => scrollToSection('pricing')}
-                  sx={{ py: '6px', px: '12px' }}
+                  sx={{ py: '6px', px: '12px', borderRadius: 20 }}
                 >
                   <Typography variant="body2" color="text.primary">
                     Pricing
@@ -125,7 +148,7 @@ function Navbar({ mode, toggleColorMode }) {
                 </MenuItem>
                 <MenuItem
                   onClick={() => scrollToSection('faq')}
-                  sx={{ py: '6px', px: '12px' }}
+                  sx={{ py: '6px', px: '12px', borderRadius: 20 }}
                 >
                   <Typography variant="body2" color="text.primary">
                     FAQ
@@ -141,28 +164,43 @@ function Navbar({ mode, toggleColorMode }) {
               }}
             >
               <ToggleColorMode mode={mode} toggleColorMode={toggleColorMode} />
-              <Button
-                color="primary"
-                variant="outlined"
-                size="small"
-                component="a"
-                href="/login"
-                sx={{ borderRadius: 15, margin: 1 }}
+              {isLoggedIn ? (
+                <Button
+                  color="primary"
+                  variant="contained"
+                  size="small"
+                  onClick={handleSignOut}
+                  sx={{ borderRadius: 15, margin: 1 }}
+                >
+                  Sign Out
+                </Button>
+              ) : (
+                <>
 
-              >
-                Sign in
-              </Button>
-              <Button
-                color="primary"
-                variant="contained"
-                size="small"
-                component="a"
-                href="/signup"
-                sx={{ borderRadius: 15, margin: 1 }}
+                  <Button
+                    href='/login'
 
-              >
-                Sign up
-              </Button>
+                    color="primary"
+                    variant="outlined"
+                    size="small"
+                    sx={{ borderRadius: 15, margin: 1 }}
+                  >
+                    Sign In
+                  </Button>
+
+                  <Button
+                    color="primary"
+                    variant="contained"
+                    href='/signup'
+                    size="small"
+                    sx={{ borderRadius: 15, margin: 1 }}
+                  >
+                    Signup
+                  </Button>
+
+
+                </>
+              )}
             </Box>
             <Box sx={{ display: { sm: '', md: 'none' } }}>
               <Button
@@ -207,30 +245,43 @@ function Navbar({ mode, toggleColorMode }) {
                   </MenuItem>
                   <MenuItem onClick={() => scrollToSection('faq')}>FAQ</MenuItem>
                   <Divider />
-                  <MenuItem>
-                    <Button
-                      color="primary"
-                      variant="contained"
-                      component="a"
-                      href="/material-ui/getting-started/templates/sign-up/"
-                      target="_blank"
-                      sx={{ width: '100%' }}
-                    >
-                      Sign up
-                    </Button>
-                  </MenuItem>
-                  <MenuItem>
-                    <Button
-                      color="primary"
-                      variant="outlined"
-                      component="a"
-                      href="/material-ui/getting-started/templates/sign-in/"
-                      target="_blank"
-                      sx={{ width: '100%' }}
-                    >
-                      Sign in
-                    </Button>
-                  </MenuItem>
+                  {isLoggedIn ? (
+                    <MenuItem>
+                      <Button
+                        color="primary"
+                        variant="contained"
+                        onClick={handleSignOut}
+                        sx={{ width: '100%' }}
+                      >
+                        Sign Out
+                      </Button>
+                    </MenuItem>
+                  ) : (
+                    <>
+                      <MenuItem>
+                        <Button
+                          color="primary"
+                          variant="contained"
+                          component="a"
+                          href="/signup"
+                          sx={{ width: '100%' }}
+                        >
+                          Sign Up
+                        </Button>
+                      </MenuItem>
+                      <MenuItem>
+                        <Button
+                          color="primary"
+                          variant="outlined"
+                          component="a"
+                          href="/login"
+                          sx={{ width: '100%' }}
+                        >
+                          Sign In
+                        </Button>
+                      </MenuItem>
+                    </>
+                  )}
                 </Box>
               </Drawer>
             </Box>

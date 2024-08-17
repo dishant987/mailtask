@@ -20,7 +20,7 @@ const generateAccessTokenAndRefereshToken = async function (userId, res) {
 
 export const signUp = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, gender } = req.body;
 
     if (!password) {
       return res.json({
@@ -54,6 +54,7 @@ export const signUp = async (req, res) => {
       username: username,
       email: email,
       password: password,
+      gender: gender.toLowerCase(),
     });
 
     if (!user) {
@@ -106,6 +107,7 @@ export const signIn = async (req, res) => {
       });
     }
     if (user.isVerfied === false) {
+      await sendEmail({ email, emailType: "VERIFY", userId: user._id });
       return res.status(404).json({
         statuscode: 404,
         message: "Email is Not Verify",
@@ -120,14 +122,13 @@ export const signIn = async (req, res) => {
       });
     }
 
-    const { accessToken, refreshToken } =
-      await generateAccessTokenAndRefereshToken(user._id);
+    const { accessToken } = await generateAccessTokenAndRefereshToken(user._id);
 
     const LoggedInUser = await User.findById(user._id).select("-password ");
 
     const options = {
       httpOnly: true,
-      secure: true,
+      secure: false,
     };
 
     return res.status(200).cookie("accessToken", accessToken, options).json({

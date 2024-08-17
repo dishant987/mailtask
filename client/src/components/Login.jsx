@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
-
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -18,7 +17,8 @@ import { Visibility, VisibilityOff } from '@mui/icons-material';
 import LoadingButton from '@mui/lab/LoadingButton';
 import ErrorIcon from '@mui/icons-material/Error';
 import Navbar from './Navbar';
-
+import { useCookies } from 'react-cookie'; // Import useCookies from react-cookie
+import { useTheme } from './Themecontext';
 
 const ErrorMessage = ({ children }) => (
     <Typography variant="caption" color="error">
@@ -28,13 +28,11 @@ const ErrorMessage = ({ children }) => (
 );
 
 export default function Login() {
-
-
-
+    const { mode } = useTheme();
     const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false); // Add loading state
-    const navigate = useNavigate()
-
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+    const [, setCookie] = useCookies(['token']);
 
     const handleTogglePasswordVisibility = () => {
         setShowPassword((prev) => !prev);
@@ -46,37 +44,51 @@ export default function Login() {
     });
 
     const handleSubmit = async (values) => {
-        // const toastId = toast.loading("Logging In...");
-        setLoading(true); // Start loading
+        setLoading(true);
         try {
-            console.log(values)
             const response = await axios.post('http://localhost:3000/api/users/signin', values);
-            console.log(response.data)
-            if (response.data.status === 200 && response.data.message === "Login SuccessFully") {
-                return toast.error(response.data.message)
-            }
-            console.log(response.data)
+            if (response.data.statuscode === 200 && response.data.message === "Login SuccessFully") {
+                toast.success(response.data.message);
 
+                //cookie with a 1-day expiration
+                const expires = new Date();
+                expires.setDate(expires.getDate() + 1);
+                setCookie('accessToken', response.data.accessToken, { path: '/', expires });
+
+
+                navigate('/profile');
+            } else {
+                console.log(response.data);
+            }
         } catch (error) {
-            // if (error.response.status === 404 && error.response.data.message === "User does not exist") {
-            //     return toast.error(error.response.data.message)
-            // }
-            // if (error.response.status === 404 && error.response.data.message === "Email is Not Verify") {
-            //     return toast.error(error.response.data.message)
-            // }
-            // if (error.response.status === 401 && error.response.data.message === "Invalid User credentials") {
-            //     return toast.error(error.response.data.message)
-            // }
-            console.log(error)
-            toast.error("Something wrong, try again later ")
+            console.log(error);
+            if (error.response) {
+                if (error.response.status === 404 && error.response.data.message === "Email is Not Verify") {
+
+                    return toast.error(error.response.data.message);
+
+                } else if (error.response.status === 404 && error.response.data.message === "User does not exist") {
+                    return toast.error(error.response.data.message);
+                }
+
+                else if (error.response.status === 401 && error.response.data.message === "Invalid User credentials") {
+                    return toast.error(error.response.data.message);
+                } else {
+                    return toast.error("An unexpected error occurred.");
+                }
+            } else {
+                return toast.error("Network error or server not reachable.");
+            }
+
+
         } finally {
-            setLoading(false); // Stop loading
+            setLoading(false);
         }
     };
 
     return (
         <>
-            <Navbar />
+
 
             <Grid container component="main" sx={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
 
@@ -124,14 +136,11 @@ export default function Login() {
                                         fullWidth
                                         name="password"
                                         label="Password"
-
                                         type={showPassword ? 'text' : 'password'}
                                         id="password"
                                         autoComplete="current-password"
-
                                         error={errors.password && touched.password}
                                         helperText={errors.password && touched.password ? <ErrorMessage children={errors.password} /> : null}
-
                                         InputProps={{
                                             endAdornment: (
                                                 <InputAdornment position="end">
@@ -146,11 +155,6 @@ export default function Login() {
                                             ),
                                         }}
                                     />
-
-
-
-
-
                                     {loading ? (
                                         <LoadingButton fullWidth sx={{ mt: 3, mb: 2 }} loading variant="contained">
                                             Submit
@@ -161,24 +165,18 @@ export default function Login() {
                                             fullWidth
                                             variant="contained"
                                             sx={{ mt: 3, mb: 2 }}
-                                            disabled={loading} // Disable button when loading
+                                            disabled={loading}
                                         >
                                             Sign In
                                         </Button>
                                     )}
-
-                                    <Grid container flex={'flex'} gap={15}>
-
+                                    <Grid container flex={'flex'} >
                                         <Grid item>
-                                            <Link to={"/signup"} variant="body2">
+                                            <Link to={"/signup"} style={{ color: mode == 'dark' ? 'white' : '' }} variant="body2">
                                                 {"Don't have an account? Sign Up"}
                                             </Link>
                                         </Grid>
-                                        <Grid item>
-                                            <Link to={"/resendverifyemail"} variant="body2">
-                                                {"Resend mail"}
-                                            </Link>
-                                        </Grid>
+
                                     </Grid>
                                 </Form>
                             )}

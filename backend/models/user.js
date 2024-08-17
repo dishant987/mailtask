@@ -22,13 +22,17 @@ const userSchema = new Schema(
       required: [true, "Password is required"],
       trim: true,
     },
+    gender: {
+      type: String,
+      required: [true, "Gender is required"],
+      enum: ["male", "female", "other"],
+    },
     isVerfied: {
       type: Boolean,
       default: false,
     },
     verifyToken: String,
     verifyTokenExpiry: Date,
-  
   },
   {
     timestamps: true,
@@ -60,6 +64,5 @@ userSchema.methods.generateAccessToken = function () {
     }
   );
 };
-
 
 export const User = mongoose.model("User", userSchema);

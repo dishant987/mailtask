@@ -11,6 +11,11 @@ import {
   IconButton,
   InputAdornment,
   Paper,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  Radio,
+  RadioGroup,
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { Field, Form, Formik } from 'formik';
@@ -21,16 +26,17 @@ import * as Yup from 'yup';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import LoadingButton from '@mui/lab/LoadingButton';
-import Navbar from './Navbar';
+import { useTheme } from '@emotion/react';
 
 const ErrorMessage = ({ children }) => (
   <Typography variant="caption" color="error">
-    <ErrorIcon style={{ marginRight: "5px", fontSize: '15px' }} />
+    <ErrorIcon style={{ marginRight: '5px', fontSize: '15px' }} />
     {children}
   </Typography>
 );
 
 export default function SignUp() {
+  const { mode } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -40,10 +46,7 @@ export default function SignUp() {
   };
 
   const SignupSchema = Yup.object().shape({
-    username: Yup.string()
-      .min(4, 'Too Short!')
-      .max(20, 'Too Long!')
-      .required('Required'),
+    username: Yup.string().min(4, 'Too Short!').max(20, 'Too Long!').required('Required'),
     email: Yup.string().email('Invalid email').required('Required'),
     password: Yup.string()
       .min(6, 'Too Short')
@@ -53,46 +56,40 @@ export default function SignUp() {
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()-_=+]).+$/,
         'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (!@#$%^&*()-_=+).'
       ),
+    gender: Yup.string().required('Required'),
   });
 
   const handleSubmit = async (values) => {
-    // const toastId = toast.loading("Loading...");
     setLoading(true);
-
+    console.log(values)
     try {
       const response = await axios.post('http://localhost:3000/api/users/signup', values);
-      console.log(response)
-      if(response.status === 201 && response.data.message ==="Email sent Successfully and Verify your mail for login"){
-        
-       return toast.success(response.data.message )
+      if (response.status === 201 && response.data.message === 'Email sent Successfully and Verify your mail for login') {
+        toast.success(response.data.message);
+        navigate('/login');
       }
-      
-      // navigate('/profile');
     } catch (error) {
-      if(error.response.status === 500 && error.response.data.message === "Something went wrong while registering the user"){
-        return toast.error(error.response.data.message)
-     }
-      if(error.response.status === 409 && error.response.data.message === "User with email or username already exists"){
-        return toast.error(error.response.data.message)
-     }
-      console.error(error);
-     return toast.error("Something went wrong, try again later.");
+      if (error.response.status === 500 && error.response.data.message === 'Something went wrong while registering the user') {
+        return toast.error(error.response.data.message);
+      }
+      if (error.response.status === 409 && error.response.data.message === 'User with email or username already exists') {
+        return toast.error(error.response.data.message);
+      }
+      return toast.error('Something went wrong, try again later.');
     } finally {
       setLoading(false);
-
     }
   };
 
   return (
-
     <>
-      <Navbar />
-      <Container component="main" maxWidth='sm' sx={{ height: '99vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+
+      <Container component="main" maxWidth="sm" sx={{ height: '99vh', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 4 }}>
         <Grid item xs={12} sm={8} md={6} paddingX={5} paddingBottom={5} component={Paper} elevation={6} sx={{ borderRadius: 4 }}>
           <CssBaseline />
           <Box
             sx={{
-              marginTop: 8,
+              marginTop: 4,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -105,7 +102,7 @@ export default function SignUp() {
               Sign up
             </Typography>
             <Formik
-              initialValues={{ username: '', email: '', password: '' }}
+              initialValues={{ username: '', email: '', password: '', gender: '' }}
               validationSchema={SignupSchema}
               onSubmit={handleSubmit}
             >
@@ -164,21 +161,26 @@ export default function SignUp() {
                           }}
                         />
                       </Grid>
+                      <Grid item xs={12}>
+                        <FormControl component="fieldset" error={errors.gender && touched.gender}>
+                          <FormLabel component="legend">Gender</FormLabel>
+                          <Field as={RadioGroup} name="gender" row>
+                            <FormControlLabel value="male" control={<Radio />} label="Male" />
+                            <FormControlLabel value="female" control={<Radio />} label="Female" />
+                            <FormControlLabel value="other" control={<Radio />} label="Others" />
+                          </Field>
+                          {errors.gender && touched.gender && <ErrorMessage>{errors.gender}</ErrorMessage>}
+                        </FormControl>
+                      </Grid>
                     </Grid>
 
-                    <LoadingButton
-                      type="submit"
-                      fullWidth
-                      sx={{ mt: 3, mb: 2 }}
-                      loading={loading}
-                      variant="contained"
-                    >
+                    <LoadingButton type="submit" fullWidth sx={{ mt: 3, mb: 2 }} loading={loading} variant="contained">
                       Submit
                     </LoadingButton>
 
                     <Grid container justifyContent="flex-end">
                       <Grid item>
-                        <Link to="/login" variant="body2">
+                        <Link to="/login" style={{ color: mode == 'dark' ? 'white' : '' }} variant="body2">
                           Already have an account? Sign in
                         </Link>
                       </Grid>
