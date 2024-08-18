@@ -4,10 +4,8 @@ import Stack from '@mui/material/Stack';
 import { deepOrange, deepPurple } from '@mui/material/colors';
 import Button from '@mui/material/Button';
 import CssBaseline from '@mui/material/CssBaseline';
-import TextField from '@mui/material/TextField';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { Paper, Skeleton } from '@mui/material';
@@ -71,8 +69,8 @@ export default function SignUp() {
           <Box component="form" sx={{ mt: 3 }}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
-                <Item sx={{ textAlign: 'left', fontSize: 19, padding: 2, fontWeight: 'bold'  }}>
-                  {isLoading ? <Skeleton width="100%"  /> : `Username: ${userData?.username}`}
+                <Item sx={{ textAlign: 'left', fontSize: 19, padding: 2, fontWeight: 'bold' }}>
+                  {isLoading ? <Skeleton width="100%" /> : `Username: ${userData?.username}`}
                 </Item>
               </Grid>
               <Grid item xs={12}>
@@ -81,15 +79,15 @@ export default function SignUp() {
                 </Item>
               </Grid>
             </Grid>
-            <Button
+            {/* <Button
               type="submit"
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
-              disabled={isLoading}
+              disabled={!isLoading}
             >
               {isLoading ? <Skeleton width="60%" /> : 'Save'}
-            </Button>
+            </Button> */}
           </Box>
         </Box>
       </Grid>
